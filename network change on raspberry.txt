@@ -1,0 +1,22 @@
+wpa_supplicant.conf
+Let’s see how to do this:
+
+Open your favorite text editor on your computer.
+The basic editor from your operating system will be fine (Notepad for example).
+Copy and paste these lines into it:
+country=US
+ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+update_config=1
+network={
+  ssid="YOURSSID"
+  scan_ssid=1
+  psk="YOURPASSWORD"
+  key_mgmt=WPA-PSK
+}
+Replace variables with your SSID and password, and change the country value if needed.
+Save the file on a location you can find easily the next time you create a new SD card.
+Insert your SD card into your computer (for a fresh new SD card created with Etcher, you have to eject and insert it again).
+Then copy the wpa_supplicant.conf file to the boot partition.
+
+It works with any Raspberry Pi OS version (Desktop or Lite).
+So, it’s perfect for any use.
