@@ -55,7 +55,7 @@ def get_device_configuration_from_file():
                     logging.info("Device local key for %s read from row %s in %s is invalid." % (device_name, line_number,
                                                                                                  DEVICE_DATA_FILE_NAME))
             else:
-                logging.info("Data in row %s in %s is not complete. Skipping..." % (line_number, DEVICE_DATA_FILE_NAME))
+                logging.warning("Data in row %s in %s is not complete. Skipping..." % (line_number, DEVICE_DATA_FILE_NAME))
                 continue
 
             DEVICES_CONFIGURATION.append({"line_number": line_number, "device_name": device_name, "device_id": device_id,
@@ -95,7 +95,7 @@ def get_input_parameters():
 
 
 def start():
-    logging.info("S T A R T I N G   S M A R T B E D K O W")
+    logging.warning("S T A R T I N G   S M A R T B E D K O W")
 
     app_config = get_app_configuration_from_file()
 
@@ -120,15 +120,15 @@ def start():
         DEVICES.append(device)
 
     if not device_initialized:
-        logging.info("No device was initialized. SmartBedkow will stop processing")
-        logging.info("S M A R T B E D K O W   S T O P P E D")
+        logging.critical("No device was initialized. SmartBedkow will stop processing")
+        logging.warning("S M A R T B E D K O W   S T O P P E D")
         sys.exit()
     else:
         logging.info("Device(s) initialization completed")
 
     se = solar_edge.SolarEdge(SOLAR_EDGE_API_KEY, SOLAR_EDGE_API_START_TIME, SOLAR_EDGE_API_END_TIME)
 
-    logging.info("S M A R T B E D K O W   S T A R T E D")
+    logging.warning("S M A R T B E D K O W   S T A R T E D")
 
     # i = 0
     while True:

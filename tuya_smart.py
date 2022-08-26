@@ -6,7 +6,6 @@ LOGNAME = "smartbedkow.log"
 
 
 class TuyaSmart:
-
     def __init__(self, name, device_id, ip_address, local_key):
         logging.basicConfig(level=logging.INFO,
                             format='%(asctime)s %(name)s %(levelname)s %(message)s',
@@ -32,14 +31,13 @@ class TuyaSmart:
                 status_err = ""
 
             if status_err:
-                logging.info("Initialization of LocalTuya device %s failed. Error when getting the status: %s" % (name, status_err))
+                logging.warning("Initialization of LocalTuya device %s failed. Error when getting the status: %s" % (name, status_err))
             else:
                 self.initialized = True
                 logging.info("Initialized LocalTuya device: %s" % name)
 
         else:
-            logging.info("Initialization of LocalTuya device %s failed" % name)
-
+            logging.warning("Initialization of LocalTuya device %s failed" % name)
 
     def turn_on(self):
         tinytuya.Device.turn_on(self.radiator)
@@ -57,7 +55,7 @@ class TuyaSmart:
         try:
             return tinytuya.OutletDevice.status(self.radiator)
         except ValueError:
-            logging.info("Could not get the status of %s" % self.name)
+            logging.warning("Could not get the status of %s" % self.name)
 
     def is_on(self):
         status_on = self.get_status()["dps"]["1"]
