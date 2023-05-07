@@ -4,12 +4,10 @@ import logging
 import os
 import sys
 import time
-import readchar as readchar
 import solar_edge
 import tuya_smart
 
 # SOLAR EDGE
-SOLAR_EDGE_API_KEY = "TO0UVRJ0AEV3NAUI52VMOOD63NVCDEBD"
 SOLAR_EDGE_API_START_TIME = datetime.datetime.now()
 SOLAR_EDGE_API_END_TIME = datetime.datetime.now()
 
@@ -25,11 +23,14 @@ def get_app_configuration_from_file():
     logging.info("Reading configuration from %s..." % CONFIG_FILE_NAME)
     config = configparser.ConfigParser()
     config.read(CONFIG_FILE_NAME)
+    solar_edge_api_key = config["USTAWIENIA"]["solar_edge_api_key"]
     wattage_threshold = config["USTAWIENIA"]["minimalna_produkcja_do_wlaczenia_grzejnikow"]
     logging.info("Wattage threshold read from configuration file: %s W" % wattage_threshold)
     refresh_interval = config["USTAWIENIA"]["czestotliwosc_odswiezania_w_sekundach"]
     logging.info("Refresh interval read from configuration file: %s s" % refresh_interval)
-    return {"wattage_threshold": wattage_threshold, "refresh_interval": refresh_interval}
+    return {"solar_edge_api_key": solar_edge_api_key,
+            "wattage_threshold": wattage_threshold,
+            "refresh_interval": refresh_interval}
 
 
 def get_device_configuration_from_file():
@@ -68,17 +69,15 @@ def get_input_parameters():
     args = sys.argv
     i = 0
     for arg in args:
+        if len(args) == 1:
+            print("No argument was specified. Accepted parameters: -start, -stop, -help")
+            sys.exit(0)
+
         i = i + 1       # To omit MAIN.PY argument
         if i == 1:
             continue
 
         arg = arg.upper()
-
-        if len(args) == 1:
-            print("No argument was specified. Accepted parameters: -start, -stop, -help")
-            print("Press any key to exit...")
-            readchar.readchar()
-            sys.exit(0)
 
         if arg in ("START", "-START"):
             start()
@@ -92,9 +91,11 @@ def get_input_parameters():
             print("                                                                                    - Rafał, 05/05/2022.")
         else:
             print("Unknown argument: %s. Accepted parameters: -start, -stop, -help" % args[1])
+            sys.exit(0)
 
 
 def start():
+    print_smart_bedkow()
     logging.warning("S T A R T I N G   S M A R T B E D K O W")
 
     app_config = get_app_configuration_from_file()
@@ -102,6 +103,7 @@ def start():
     refresh_interval_in_seconds = int(app_config["refresh_interval"])
     refresh_interval_in_minutes = refresh_interval_in_seconds / 60
     wattage_threshold = int(app_config["wattage_threshold"])
+    solar_edge_api_key = app_config["solar_edge_api_key"]
 
     get_device_configuration_from_file()
 
@@ -126,14 +128,11 @@ def start():
     else:
         logging.info("Device(s) initialization completed")
 
-    se = solar_edge.SolarEdge(SOLAR_EDGE_API_KEY, SOLAR_EDGE_API_START_TIME, SOLAR_EDGE_API_END_TIME)
+    se = solar_edge.SolarEdge(solar_edge_api_key, SOLAR_EDGE_API_START_TIME, SOLAR_EDGE_API_END_TIME)
 
     logging.warning("S M A R T B E D K O W   S T A R T E D")
 
-    # i = 0
     while True:
-        # Trzeba będzie zrobić konfigurację (tinytuya wizard) na Będkowie.
-
         se.update_times(time_interval=refresh_interval_in_minutes)
         se.get_solar_edge_api_response()
 
@@ -149,20 +148,11 @@ def start():
                     if device.is_initialized():
                         device.turn_off()
 
-#########################################
-        #USUNĄĆ PO TESTACH
-        # i = i + 1
-        # if i % 2 == 0:
-        #     radiator1.turn_off()
-        # else:
-        #     radiator1.turn_on()
-
-#########################################
-
         time.sleep(refresh_interval_in_seconds)  # Run every SOLAR_EDGE_POWER_PRODUCTION_REFRESH_INTERVAL_IN_SECONDS / 60 minutes
 
 
 def stop():
+    #Linux only
     logging.info("Program stopped by " + os.getlogin())
     os.system('ps axf | grep main | grep -v grep | awk \'{print "kill -9 " $1 }\' | sh')
 
@@ -188,5 +178,4 @@ if __name__ == '__main__':
                             logging.FileHandler(LOGNAME),
                             logging.StreamHandler(sys.stdout)
                         ])
-    print_smart_bedkow()
     get_input_parameters()
