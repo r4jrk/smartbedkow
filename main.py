@@ -159,13 +159,7 @@ def start():
         se.get_solar_edge_api_response()
 
         se_power_production = se.get_power_production()
-        # low_temperature_power_production_override_in_celsius - read the current temperature from the radiator (?)
-        # co niesie get_status()?
-        # detect_available_dps()   - datapoints z device
-        # json['result']['properties'][3]['value']
-        # curl --request GET "https://openapi.tuyaeu.com/v2.0/cloud/thing/40631580483fda1abcab/shadow/properties?codes=Temp_current" --header "sign_method: HMAC-SHA256" --header "client_id: 4je3h7mpbj1bo1uj86zj" --header "t: 1699561886811" --header "mode: cors" --header "Content-Type: application/json" --header "sign: E89B880C97FD6F825A7D1A66F6C1B5F43E1AA80570B1D334F7BC779F18EC160F" --header "access_token: 1c8d9c658e80d0e8106bac4d3bdbe695"
-        # to sie tak da przez cloud api, ale lepiej to robic w local
-        if se_power_production >= wattage_threshold:  # Turn on radiator(s)
+        if se_power_production >= wattage_threshold:  # Turn on radiators
             for device in DEVICES:
                 if device.is_initialized():
                     if not device.is_on():
@@ -193,24 +187,15 @@ def stop():
 
 def print_smart_bedkow():
     print("")
-    print(
-        "   .-'''-. ,---.    ,---.   ____    .-------. ,---------.  _______       .-''-.   ______     .--.   .--.      ,-----.    .--.      .--. ")
-    print(
-        "  / _     \|    \  /    | .'  __ `. |  _ _   \\\          \\\  ____  \   .'_ _   \ |    _ `''. |  | _/  /     .'  .-,  '.  |  |_     |  | ")
-    print(
-        " (`' )/`--'|  ,  \/  ,  |/   '  \  \| ( ' )  | `--.  ,---'| |    \ |  / ( ` )   '| _ | ) _  \| (`' ) /     / ,-.|  \ _ \ | _( )_   |  | ")
-    print(
-        "(_ o _).   |  |\_   /|  ||___|  /  ||(_ o _) /    |   \   | |____/ / . (_ o _)  ||( ''_'  ) ||(_ ()_)     ;  \  '_ /  | :|(_ o _)  |  | ")
-    print(
-        " (_,_). '. |  _( )_/ |  |   _.-`   || (_,_).' __  :_ _:   |   _ _ '. |  (_,_)___|| . (_) `. || (_,_)   __ |  _`,/ \ _/  || (_,_) \ |  | ")
-    print(
-        ".---.  \  :| (_ o _) |  |.'   _    ||  |\ \  |  | (_I_)   |  ( ' )  \\'  \   .---.|(_    ._) '|  |\ \  |  |: (  '\_/ \   ;|  |/    \|  | ")
-    print(
-        "\    `-'  ||  (_,_)  |  ||  _( )_  ||  | \ `'   /(_(=)_)  | (_{;}_) | \  `-'    /|  (_.\.' / |  | \ `'   / \ `"'"/  \  ) / |  '  "'"' '" /\  `  | ")
-    print(
-        " \       / |  |      |  |\ (_ o _) /|  |  \    /  (_I_)   |  (_,_)  /  \       / |       .'  |  |  \    /   '. \_/``"'"''.'"'""  |    /  \    | ")
-    print(
-        "  `-...-'  '--'      '--' '.(_,_).' ''-'   `'-'   '---'   /_______.'    `'-..-'  '-----'`    `--'   `'-'      '-----'    `---'    `---` ")
+    print(        "   .-'''-. ,---.    ,---.   ____    .-------. ,---------.  _______       .-''-.   ______     .--.   .--.      ,-----.    .--.      .--. ")
+    print(        "  / _     \|    \  /    | .'  __ `. |  _ _   \\\          \\\  ____  \   .'_ _   \ |    _ `''. |  | _/  /     .'  .-,  '.  |  |_     |  | ")
+    print(        " (`' )/`--'|  ,  \/  ,  |/   '  \  \| ( ' )  | `--.  ,---'| |    \ |  / ( ` )   '| _ | ) _  \| (`' ) /     / ,-.|  \ _ \ | _( )_   |  | ")
+    print(        "(_ o _).   |  |\_   /|  ||___|  /  ||(_ o _) /    |   \   | |____/ / . (_ o _)  ||( ''_'  ) ||(_ ()_)     ;  \  '_ /  | :|(_ o _)  |  | ")
+    print(        " (_,_). '. |  _( )_/ |  |   _.-`   || (_,_).' __  :_ _:   |   _ _ '. |  (_,_)___|| . (_) `. || (_,_)   __ |  _`,/ \ _/  || (_,_) \ |  | ")
+    print(        ".---.  \  :| (_ o _) |  |.'   _    ||  |\ \  |  | (_I_)   |  ( ' )  \\'  \   .---.|(_    ._) '|  |\ \  |  |: (  '\_/ \   ;|  |/    \|  | ")
+    print(        "\    `-'  ||  (_,_)  |  ||  _( )_  ||  | \ `'   /(_(=)_)  | (_{;}_) | \  `-'    /|  (_.\.' / |  | \ `'   / \ `"'"/  \  ) / |  '  "'"' '" /\  `  | ")
+    print(        " \       / |  |      |  |\ (_ o _) /|  |  \    /  (_I_)   |  (_,_)  /  \       / |       .'  |  |  \    /   '. \_/``"'"''.'"'""  |    /  \    | ")
+    print(        "  `-...-'  '--'      '--' '.(_,_).' ''-'   `'-'   '---'   /_______.'    `'-..-'  '-----'`    `--'   `'-'      '-----'    `---'    `---` ")
     print("")
 
 
