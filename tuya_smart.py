@@ -31,7 +31,8 @@ class TuyaSmart:
                 status_err = ""
 
             if status_err:
-                logging.warning("Initialization of LocalTuya device %s failed. Error when getting the status: %s" % (name, status_err))
+                logging.warning("Initialization of LocalTuya device %s failed. Error when getting the status: %s" %
+                                (name, status_err))
             else:
                 self.initialized = True
                 logging.info("Initialized LocalTuya device: %s" % name)

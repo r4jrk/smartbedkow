@@ -3,13 +3,11 @@ import logging
 import sys
 import requests
 
-
 LOGNAME = "smartbedkow.log"
 
 
 class SolarEdge:
-
-    def __init__(self, api_key, start_time, end_time):
+    def __init__(self, api_key, site_id, start_time, end_time):
         logging.basicConfig(level=logging.INFO,
                             format='%(asctime)s %(name)s %(levelname)s %(message)s',
                             handlers=[
@@ -20,6 +18,7 @@ class SolarEdge:
         logging.info("Initializing SolarEdge API Connector...")
 
         self.API_KEY = api_key
+        self.SITE_ID = site_id
         self.start_time = start_time
         self.end_time = end_time
         self.power_production = 0
@@ -47,7 +46,10 @@ class SolarEdge:
     def get_api_call_api_key(self):
         return "?api_key=" + self.API_KEY
 
-    def get_api_call_star_time(self):
+    def get_api_call_site_id(self):
+        return self.SITE_ID
+
+    def get_api_call_start_time(self):
         return "&startTime=" + self.start_time.strftime("%Y-%m-%d %H:%M:%S")
 
     def get_api_call_end_time(self):
@@ -55,10 +57,11 @@ class SolarEdge:
 
     def build_solar_edge_api_uri(self):
         api_key = self.get_api_call_api_key()
-        start_time = self.get_api_call_star_time()
+        site_id = self.get_api_call_site_id()
+        start_time = self.get_api_call_start_time()
         end_time = self.get_api_call_end_time()
-        api_connection_url = "https://monitoringapi.solaredge.com/site/2431166/powerDetails" \
-                             + api_key + start_time + end_time
+        api_connection_url = ("https://monitoringapi.solaredge.com/site/%s/powerDetails"
+                              + api_key + start_time + end_time) % site_id
 
         logging.info("SolarEdge API request URL: %s" % api_connection_url)
 
@@ -88,7 +91,7 @@ class SolarEdge:
         response_end_time = api_response["powerDetails"]["meters"][0]["values"][1]["date"]
 
         logging.info("Response parsed. Production between %s and %s: %s W" % (response_start_time,
-                     response_end_time, round(wattage, 2)))
+                                                                              response_end_time, round(wattage, 2)))
 
         self.response_start_time = response_start_time
         self.response_end_time = response_end_time
