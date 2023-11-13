@@ -4,3 +4,6 @@ venv/
 smartbedkow.log
 snapshot.json
 tuya_devices.xlsx
+tinytuya.json
+tuya-raw.json
+devices.json

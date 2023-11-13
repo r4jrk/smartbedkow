@@ -6,7 +6,7 @@ LOGNAME = "smartbedkow.log"
 
 
 class TuyaSmart:
-    def __init__(self, name, device_id, ip_address, local_key):
+    def __init__(self, name, id, ip_address, local_key):
         logging.basicConfig(level=logging.INFO,
                             format='%(asctime)s %(name)s %(levelname)s %(message)s',
                             handlers=[
@@ -16,7 +16,7 @@ class TuyaSmart:
 
         logging.info("Initializing LocalTuya device: %s..." % name)
 
-        self.radiator = tinytuya.OutletDevice(device_id, ip_address, local_key)
+        self.radiator = tinytuya.OutletDevice(id, ip_address, local_key)
         self.radiator.set_version(3.3)
         self.name = name
         self.on = False
@@ -62,6 +62,18 @@ class TuyaSmart:
         status_on = self.get_status()["dps"]["1"]
         self.on = status_on
         return status_on
+
+    def get_current_temperature(self):
+        current_temperature = self.get_status()["dps"]["4"]
+        return current_temperature
+
+    def get_set_temperature(self):
+        set_temperature = self.get_status()["dps"]["3"]
+        return set_temperature
+
+    def get_heating_power(self):
+        heating_power = self.get_status()["dps"]["7"]
+        return heating_power
 
     def is_initialized(self):
         return self.initialized
