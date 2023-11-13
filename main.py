@@ -28,11 +28,14 @@ def get_app_configuration_from_file():
     solar_edge_site_id = config["SETTINGS"]["solar_edge_site_id"]
     wattage_threshold = config["SETTINGS"]["minimal_power_produced_to_turn_on_radiators_in_watts"]
     logging.info("Wattage threshold read from configuration file: %s W" % wattage_threshold)
+    temperature_threshold = config["SETTINGS"]["low_temperature_wattage_threshold_override_in_celsius"]
+    logging.info("Temperature threshold read from configuration file: %s °C" % temperature_threshold)
     refresh_interval = config["SETTINGS"]["refresh_rate_in_seconds"]
     logging.info("Refresh interval read from configuration file: %s s" % refresh_interval)
     return {"solar_edge_api_key": solar_edge_api_key,
             "solar_edge_site_id": solar_edge_site_id,
             "wattage_threshold": wattage_threshold,
+            "temperature_threshold": temperature_threshold,
             "refresh_interval": refresh_interval}
 
 
@@ -44,28 +47,28 @@ def get_device_configuration_from_file():
             if row_contents[0] == "no":  # To omit headers
                 continue
             row_number = row_contents[0]
-            device_name = row_contents[1]
-            device_id = row_contents[2]
-            device_ip_address = row_contents[3]
-            device_local_key = row_contents[4]
-            if (device_name != "") & (device_id != "") & (device_ip_address != "") & (device_local_key != ""):
-                if len(device_ip_address.split(".")) != 4:
-                    logging.info("IP address for %s read from row %s in %s is invalid." % (device_name, row_number,
+            name = row_contents[1]
+            id = row_contents[2]
+            ip_address = row_contents[3]
+            local_key = row_contents[4]
+            if (name != "") & (id != "") & (ip_address != "") & (local_key != ""):
+                if len(ip_address.split(".")) != 4:
+                    logging.info("IP address for %s read from row %s in %s is invalid." % (name, row_number,
                                                                                            DEVICE_DATA_FILE_NAME))
-                if len(device_id) != 20:
-                    logging.info("Device ID for %s read from row %s in %s is invalid." % (device_name, row_number,
+                if len(id) != 20:
+                    logging.info("Device ID for %s read from row %s in %s is invalid." % (name, row_number,
                                                                                           DEVICE_DATA_FILE_NAME))
-                if len(device_local_key) != 17:
+                if len(local_key) != 17:
                     logging.info(
-                        "Device local key for %s read from row %s in %s is invalid." % (device_name, row_number,
+                        "Device local key for %s read from row %s in %s is invalid." % (name, row_number,
                                                                                         DEVICE_DATA_FILE_NAME))
             else:
                 logging.warning(
                     "Data in row %s in %s is not complete. Skipping..." % (row_number, DEVICE_DATA_FILE_NAME))
                 continue
 
-            DEVICES_CONFIGURATION.append({"row_number": row_number, "device_name": device_name, "device_id": device_id,
-                                          "device_ip_address": device_ip_address, "device_local_key": device_local_key})
+            DEVICES_CONFIGURATION.append({"row_number": row_number, "name": name, "id": id,
+                                          "ip_address": ip_address, "local_key": local_key})
 
     logging.info("Parsing data from %s finished" % DEVICE_DATA_FILE_NAME)
 
@@ -109,21 +112,32 @@ def start():
     refresh_interval_in_seconds = int(app_config["refresh_interval"])
     refresh_interval_in_minutes = refresh_interval_in_seconds / 60
     wattage_threshold = int(app_config["wattage_threshold"])
+    temperature_threshold = int(app_config["temperature_threshold"])
     solar_edge_api_key = app_config["solar_edge_api_key"]
     solar_edge_site_id = app_config["solar_edge_site_id"]
 
+    if len(solar_edge_api_key) == 0:
+        logging.critical("SolarEdge API Key is empty. SmartBedkow will stop processing")
+        logging.warning("S M A R T B E D K O W   S T O P P E D")
+        sys.exit()
+
+    if len(solar_edge_site_id) == 0:
+        logging.critical("SolarEdge SITE Id is empty. SmartBedkow will stop processing")
+        logging.warning("S M A R T B E D K O W   S T O P P E D")
+        sys.exit()
+
     get_device_configuration_from_file()
 
-    logging.info("%s device(s) will be attempted to initialize" % len(DEVICES_CONFIGURATION))
+    logging.info("%s device(s) will be attempted to be initialized" % len(DEVICES_CONFIGURATION))
 
     device_initialized = False
 
     for i in range(len(DEVICES_CONFIGURATION)):
-        device_name = DEVICES_CONFIGURATION[i].get("device_name").strip()
-        device_id = DEVICES_CONFIGURATION[i].get("device_id").strip()
-        device_ip_address = DEVICES_CONFIGURATION[i].get("device_ip_address").strip()
-        device_local_key = DEVICES_CONFIGURATION[i].get("device_local_key").strip()
-        device = tuya_smart.TuyaSmart(device_name, device_id, device_ip_address, device_local_key)
+        name = DEVICES_CONFIGURATION[i].get("name").strip()
+        id = DEVICES_CONFIGURATION[i].get("id").strip()
+        ip_address = DEVICES_CONFIGURATION[i].get("ip_address").strip()
+        local_key = DEVICES_CONFIGURATION[i].get("local_key").strip()
+        device = tuya_smart.TuyaSmart(name, id, ip_address, local_key)
         if device.is_initialized():
             device_initialized = True
         DEVICES.append(device)
@@ -145,16 +159,18 @@ def start():
         se.get_solar_edge_api_response()
 
         se_power_production = se.get_power_production()
-
         if se_power_production >= wattage_threshold:  # Turn on radiators
             for device in DEVICES:
-                if not device.is_on():
-                    if device.is_initialized():
+                if device.is_initialized():
+                    if not device.is_on():
                         device.turn_on()
-        else:  # Turn off radiators
+        else:  # Turn off radiator(s) unless the measured temperature is no less than the threshold
             for device in DEVICES:
-                if device.is_on():
-                    if device.is_initialized():
+                if device.is_initialized():
+                    if device.get_current_temperature() <= temperature_threshold:
+                        if not device.is_on():
+                            device.turn_on()
+                    else:
                         device.turn_off()
 
         time.sleep(refresh_interval_in_seconds)  # Run every SOLAR_EDGE_POWER_PRODUCTION_REFRESH_INTERVAL_IN_SECONDS / 60 minutes
